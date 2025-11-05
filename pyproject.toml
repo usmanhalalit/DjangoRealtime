@@ -1,0 +1,86 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "djrealtime"
+version = "1.0.0"
+description = "Realtime browser events for Django + PostgreSQL"
+readme = "README.md"
+
+requires-python = ">=3.10"
+dependencies = [
+    "Django>=5.0",
+    "psycopg[binary]",
+]
+
+authors = [
+    {name = "Muhammad Usman", email = "hi@usman.it"}
+]
+
+classifiers = [
+    "Framework :: Django",
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-django",
+    "pytest-cov",
+    "pytest-asyncio",
+    "ruff",
+]
+
+[tool.setuptools.packages.find]
+exclude = ["example*", "tests*"]
+
+[tool.setuptools.package-data]
+djangorealtime = ["static/**/*", "templates/**/*"]
+
+[tool.pytest.ini_options]
+addopts = "--tb=short -v"
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+filterwarnings = [
+    "ignore:Error when trying to teardown test databases.*:pytest.PytestWarning",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if __name__ == .__main__.:",
+    "except.*:",
+    "raise NotImplementedError",
+]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+exclude = ["*/migrations/*"]
+
+[tool.ruff.lint]
+select = [
+    "E",      # pycodestyle errors
+    "W",      # pycodestyle warnings
+    "F",      # pyflakes
+    "I",      # isort
+    "B",      # flake8-bugbear
+    "C4",     # flake8-comprehensions
+    "UP",     # pyupgrade
+    "SIM",    # flake8-simplify
+    "PERF",   # perflint
+    "RUF",    # ruff-specific rules
+    "DJ",     # flake8-django
+]
+ignore = [
+    "RUF012",  # mutable class attributes ClassVar annotation
+    "DJ001"   # null=True on CharField
+]
+
+
+[tool.ruff.lint.isort]
+known-first-party = ["djangorealtime"]
+

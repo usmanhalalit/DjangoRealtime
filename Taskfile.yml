@@ -1,0 +1,27 @@
+# https://taskfile.dev
+
+version: '3'
+
+tasks:
+  lint:
+    cmds:
+      - ruff check . --fix
+
+  watch:
+    cmds:
+      - python example/manage.py runserver 8085
+
+  setup:
+    cmds:
+      - uv venv --python 3.11
+      - source venv/bin/activate 2> /dev/null || true
+      - uv pip install -r pyproject.toml --all-extras
+
+  test:
+    cmds:
+      - printf "%s | Django %s\n" "$(python --version)" "$(python -m django --version)"
+      - python -m pytest -x -s --cov {{.CLI_ARGS }}
+
+  cover:
+    cmds:
+      - python -m pytest --cov=djangorealtime --cov-report=term-missing --cov-report=term:skip-covered {{.CLI_ARGS }}

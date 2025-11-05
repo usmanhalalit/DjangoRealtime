@@ -1,0 +1,254 @@
+{% load djangorealtime_tags %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>SSE Test - DjangoRealtime</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+    <div class="max-w-6xl mx-auto p-4">
+        <div class="bg-white rounded-lg shadow-md p-4 mb-4">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-800 ml-2">DjangoRealtime SSE Test</h1>
+                    <p class="text-sm text-gray-600 ml-2">Test server-sent events</p>
+                </div>
+                <div class="text-right mr-2">
+                    {% if user.is_authenticated %}
+                        <div class="flex items-center space-x-2">
+                            <div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-semibold">
+                                {{ user.username|slice:":1"|upper }}
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium text-gray-800">{{ user.username }}</p>
+                                <p class="text-xs text-gray-500">User ID: {{ user.id }}</p>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="text-sm">
+                            <p class="text-gray-500 mb-1">Not logged in (using global events)</p>
+                            <a href="/admin/login/?next=/" class="text-blue-600 hover:text-blue-800 underline">Login</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Send Message Form -->
+            <div class="bg-white rounded-lg shadow-md p-4">
+                <h2 class="text-lg font-semibold text-gray-800 mb-3">Send Message</h2>
+                <form id="messageForm" class="space-y-3">
+                    <div>
+                        <label for="eventType" class="block text-sm font-medium text-gray-700 mb-1">Event Type</label>
+                        <input type="text" id="eventType" name="eventType" value="test" 
+                               class="w-full px-2 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                    </div>
+                    
+                    <div>
+                        <label for="message" class="block text-sm font-medium text-gray-700 mb-1">Message</label>
+                        <textarea id="message" name="message" rows="2" 
+                                  class="w-full px-2 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                                  placeholder="Enter your message here..."></textarea>
+                    </div>
+                    
+                    <div class="flex items-center">
+                        <input type="checkbox" id="globalPublish" name="globalPublish"
+                               {% if not user.is_authenticated %}checked{% endif %}
+                               class="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                        <label for="globalPublish" class="text-sm font-medium text-gray-700">
+                            Global (send to all users)
+                        </label>
+                    </div>
+                    
+                    <button type="submit" 
+                            class="w-full bg-blue-600 text-white py-1.5 px-3 rounded-md hover:bg-blue-700 transition duration-200 font-medium text-sm">
+                        Send Message
+                    </button>
+                </form>
+                
+                <div id="sendStatus" class="mt-4 h-10">
+                    <div class="px-3 py-2 rounded-md text-sm opacity-0 transition-opacity"></div>
+                </div>
+            </div>
+
+            <!-- Connection Status -->
+            <div class="bg-white rounded-lg shadow-md p-4">
+                <h2 class="text-lg font-semibold text-gray-800 mb-3">Connection Status</h2>
+                <div id="connectionStatus" class="space-y-2">
+                    <div class="flex items-center">
+                        <span class="w-3 h-3 rounded-full bg-yellow-400 mr-2 animate-pulse"></span>
+                        <span class="text-gray-700">Connecting...</span>
+                    </div>
+                </div>
+                
+                <div class="mt-4">
+                    <h3 class="text-base font-medium text-gray-700 mb-2">Stats</h3>
+                    <div class="space-y-1 text-sm text-gray-600">
+                        <div>Messages Received: <span id="messageCount" class="font-mono">0</span></div>
+                        <div>Last Event: <span id="lastEventTime" class="font-mono">--</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Event Stream -->
+        <div class="bg-white rounded-lg shadow-md p-4 mt-4">
+            <div class="flex justify-between items-center mb-3">
+                <div>
+                    <h2 class="text-lg font-semibold text-gray-800">Event Stream</h2>
+                    <p class="text-xs text-gray-500">Displays event types: test, connected, message</p>
+                </div>
+                <button id="clearMessages"
+                        class="text-sm text-gray-500 hover:text-gray-700 transition duration-200">
+                    Clear Messages
+                </button>
+            </div>
+            <div id="messages" class="space-y-2 max-h-64 overflow-y-auto">
+                <div class="text-gray-400 text-sm italic">Waiting for events...</div>
+            </div>
+        </div>
+    </div>
+    
+    {% djangorealtime_js %}
+
+    <script>
+        let messageCount = 0;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const messagesDiv = document.getElementById('messages');
+            const connectionStatusDiv = document.getElementById('connectionStatus');
+
+            // Function to handle incoming messages
+            function handleMessage(data) {
+                // Clear initial message if this is the first event
+                if (messageCount === 0) {
+                    messagesDiv.innerHTML = '';
+                }
+
+                messageCount++;
+                document.getElementById('messageCount').textContent = messageCount;
+                document.getElementById('lastEventTime').textContent = new Date().toLocaleTimeString();
+
+                // Create message element with styling based on type
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'p-2 rounded-md border transition-all duration-300 hover:shadow-md text-sm';
+
+                if (data.type === 'connected') {
+                    messageDiv.className += ' bg-green-50 border-green-200';
+                    connectionStatusDiv.innerHTML = `
+                        <div class="flex items-center">
+                            <span class="w-3 h-3 rounded-full bg-green-500 mr-2"></span>
+                            <span class="text-green-700">Connected</span>
+                        </div>
+                    `;
+                } else if (data.type === 'error') {
+                    messageDiv.className += ' bg-red-50 border-red-200';
+                } else {
+                    messageDiv.className += ' bg-blue-50 border-blue-200';
+                }
+
+                // Format the JSON nicely
+                const timestamp = new Date().toLocaleTimeString();
+                messageDiv.innerHTML = `
+                    <div class="flex justify-between items-start mb-1">
+                        <span class="text-xs font-semibold text-gray-600">${data.type || 'unknown'}</span>
+                        <span class="text-xs text-gray-400">${timestamp}</span>
+                    </div>
+                    <pre class="text-sm text-gray-700 overflow-x-auto"><code>${JSON.stringify(data, null, 2)}</code></pre>
+                `;
+
+                messagesDiv.insertBefore(messageDiv, messagesDiv.firstChild);
+
+                // Limit to 50 messages
+                while (messagesDiv.children.length > 50) {
+                    messagesDiv.removeChild(messagesDiv.lastChild);
+                }
+            }
+
+            // Listen for all DjangoRealtime events (auto-connected by default)
+            // The library dispatches events with 'djr:' prefix
+            window.addEventListener('djr:message', function(e) {
+                handleMessage(e.detail);
+            });
+
+            window.addEventListener('djr:connected', function(e) {
+                handleMessage(e.detail);
+            });
+
+            window.addEventListener('djr:test', function(e) {
+                handleMessage(e.detail);
+            });
+
+            // Subscribe to specific test events
+            DjangoRealtime.subscribe('test', function(detail) {
+                console.log('Test Event Received:', detail);
+            });
+
+            
+            // Form submission
+            document.getElementById('messageForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const formData = {
+                    type: document.getElementById('eventType').value,
+                    message: document.getElementById('message').value,
+                    is_global: document.getElementById('globalPublish').checked
+                };
+                
+                const statusDiv = document.getElementById('sendStatus');
+                const statusContent = statusDiv.querySelector('div');
+                
+                try {
+                    const response = await fetch('/test/send-message/', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': getCookie('csrftoken')
+                        },
+                        body: JSON.stringify(formData)
+                    });
+                    
+                    if (response.ok) {
+                        statusContent.className = 'px-3 py-2 rounded-md text-sm bg-green-100 text-green-700 opacity-100';
+                        statusContent.textContent = 'Message sent successfully!';
+                        document.getElementById('message').value = '';
+                    } else {
+                        statusContent.className = 'px-3 py-2 rounded-md text-sm bg-red-100 text-red-700 opacity-100';
+                        statusContent.textContent = 'Failed to send message';
+                    }
+                } catch (error) {
+                    statusContent.className = 'px-3 py-2 rounded-md text-sm bg-red-100 text-red-700 opacity-100';
+                    statusContent.textContent = 'Error: ' + error.message;
+                }
+
+                setTimeout(() => statusContent.className = 'px-3 py-2 rounded-md text-sm opacity-0 transition-opacity', 3000);
+            });
+            
+            // Clear messages button
+            document.getElementById('clearMessages').addEventListener('click', function() {
+                messagesDiv.innerHTML = '<div class="text-gray-400 text-sm italic">Waiting for events...</div>';
+                messageCount = 0;
+                document.getElementById('messageCount').textContent = '0';
+            });
+        });
+        
+        // Helper to get CSRF token
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    </script>
+</body>
+</html>
