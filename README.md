@@ -310,6 +310,11 @@ For local development, DjangoRealtime supports both ASGI and WSGI servers:
 DjangoRealtime works seamlessly with Django's built-in development server (`runserver`), which runs in WSGI mode.
 The library automatically detects when you're using `runserver` with WSGI and uses makeshift adapter to support SSE.
 
+## My Production Apps Using DjangoRealtime
+- [Canvify](https://canvify.app) - Import Canva designs into Shopify stores
+- [EmbedAny](https://embedany.com) - Embed any external content into your Shopify store
+
+
 ## Requirements
 
 - Django >= 5.0
