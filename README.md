@@ -5,6 +5,14 @@ No WebSockets, no Channels, no processes to run, no Redis. Just set up and go!
 
 Django + PostgreSQL = Realtime Updates in Browser
 
+## Live Demo
+Check out the live demo at and chat in 90s-style chatroom:
+
+[**Chat room**](https://djr.nofuss.site/chat/)
+
+Built with HTMX and 6 lines of vanilla JavaScript!
+
+
 ## Basic Usage
 
 ```python
@@ -302,6 +310,11 @@ DjangoRealtime.connect({
 Custom headers are not supported in official EventSource SSE helper.
 
 ___
+
+## Troubleshooting
+Some platforms like DigitalOcean App Platform enforce cache headers that break SSE connections.
+Especially if you are using their CDN or domain like *.ondigitalocean.app
+You can simply use a proxy like Cloudflare in front of your app. Or you can disable edge caching for SSE endpoint.
 
 ## Local Development
 
