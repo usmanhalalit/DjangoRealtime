@@ -33,6 +33,10 @@ DEBUG = True if os.getenv("DEBUG") == "true" else False  # noqa: SIM210
 
 ALLOWED_HOSTS = [os.getenv('SITE_DOMAIN', '127.0.0.1')]
 
+CSRF_TRUSTED_ORIGINS = [
+    f"https://{os.getenv('SITE_DOMAIN', '127.0.0.1')}",
+]
+
 
 # Application definition
 

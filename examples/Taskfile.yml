@@ -70,7 +70,9 @@ tasks:
       - docker run -p 8085:8085 -e PGHOST=host.docker.internal -e PGUSER={{.USER}} djangorealtime
 
   container_init:
+    desc: Initialise container for deployment
     cmds:
+      - python manage.py makemigrations
       - python manage.py migrate
       - hypercorn root.asgi:application --bind 0.0.0.0:8085
 
