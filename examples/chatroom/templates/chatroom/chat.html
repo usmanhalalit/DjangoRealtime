@@ -3,7 +3,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Chatroom Dot Com - DjangoRealtime</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
@@ -14,44 +14,55 @@
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Comic+Sans+MS&display=swap');
-        body { font-family: 'Comic Sans MS', 'Comic Sans', cursive, sans-serif; }
+        body {
+            font-family: 'Comic Sans MS', 'Comic Sans', cursive, sans-serif;
+            /* Prevent iOS zoom on input focus */
+            -webkit-text-size-adjust: 100%;
+        }
         @keyframes blink { 50% { opacity: 0; } }
         .blink { animation: blink 1s linear infinite; }
         marquee { display: block; }
+
+        /* Mobile-specific adjustments */
+        @media (max-width: 768px) {
+            .decorative-emoji {
+                display: none;
+            }
+        }
     </style>
 </head>
 <body class="min-h-screen p-4 bg-gradient-to-br from-purple-400 via-pink-400 to-cyan-400">
 
     <div class="max-w-4xl mx-auto">
 
-        <header class="border-8 border-double border-gray-800 bg-gradient-to-r from-purple-500 to-pink-500 p-6 mb-4 shadow-2xl">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                    <span class="text-5xl">💬</span>
+        <header class="border-8 border-double border-gray-800 bg-gradient-to-r from-purple-500 to-pink-500 p-3 md:p-6 mb-4 shadow-2xl">
+            <div class="flex items-center justify-between flex-wrap gap-2">
+                <div class="flex items-center gap-2">
+                    <span class="text-3xl md:text-5xl">💬</span>
                     <div>
-                        <h1 class="text-4xl font-black text-yellow-300 drop-shadow-lg">
+                        <h1 class="text-xl md:text-4xl font-black text-yellow-300 drop-shadow-lg">
                             <span class="blink">✨</span> CHATROOM DOT COM <span class="blink">✨</span>
                         </h1>
-                        <p class="text-sm text-yellow-100 font-bold">Welcome to the information superhighway!</p>
+                        <p class="text-xs md:text-sm text-yellow-100 font-bold hidden md:block">Welcome to the information superhighway!</p>
                     </div>
                 </div>
-                <div class="text-right bg-white/20 p-3 rounded-lg backdrop-blur-sm">
-                    <p class="text-white font-bold text-lg">👤 {{ user.username }}</p>
+                <div class="text-right bg-white/20 p-2 md:p-3 rounded-lg backdrop-blur-sm">
+                    <p class="text-white font-bold text-sm md:text-lg">👤 {{ user.username }}</p>
                     <button hx-post="{% url 'chatroom:logout' %}"
                             hx-swap="none"
                             hx-on::after-request="window.location.href = '{% url 'chatroom:login' %}';"
-                            class="text-sm text-yellow-200 hover:text-yellow-100 underline font-bold bg-transparent border-0 cursor-pointer">
+                            class="text-xs md:text-sm text-yellow-200 hover:text-yellow-100 underline font-bold bg-transparent border-0 cursor-pointer">
                         Log out
                     </button>
                 </div>
             </div>
         </header>
 
-        <div class="border-8 border-double border-gray-800 bg-gray-100 p-6 shadow-2xl">
+        <div class="border-8 border-double border-gray-800 bg-gray-100 p-2 md:p-6 shadow-2xl">
 
             <!-- Messages area -->
             <div id="messages-container"
-                 class="border-4 border-gray-600 bg-white p-4 h-96 overflow-y-auto mb-4 shadow-inner flex flex-col-reverse"
+                 class="border-4 border-gray-600 bg-white p-2 md:p-4 h-[50vh] md:h-96 overflow-y-auto mb-4 shadow-inner flex flex-col-reverse"
                  hx-get="{% url 'chatroom:get_messages' %}"
                  hx-trigger="load, refreshMessages from:body"
                  hx-swap="innerHTML">
@@ -59,35 +70,38 @@
                 {% include 'chatroom/partials/messages_list.html' %}
             </div>
 
-            <form hx-post="{% url 'chatroom:send_message' %}"
+            <form id="message-form"
+                  hx-post="{% url 'chatroom:send_message' %}"
                   hx-swap="none"
-                  hx-on::after-request="this.reset();"
-                  class="flex gap-2">
+                  hx-on::after-request="this.reset(); htmx.trigger('#messages-container', 'refreshMessages'); document.querySelector('#message-input').focus();"
+                  class="flex gap-1 md:gap-2">
 
                 {% csrf_token %}
                 <input type="text"
+                       id="message-input"
                        name="message"
-                       placeholder="Type your message here... 📝"
-                       class="flex-1 p-4 border-4 border-gray-600 focus:outline-none focus:border-blue-500 text-lg shadow-lg"
+                       placeholder="Type message... 📝"
+                       class="flex-1 p-2 md:p-4 border-4 border-gray-600 focus:outline-none focus:border-blue-500 text-base md:text-lg shadow-lg"
                        maxlength="500"
+                       autocomplete="off"
                        required>
 
                 <button type="submit"
-                        class="px-8 py-4 bg-gradient-to-b from-gray-100 to-gray-300 border-4 border-gray-600 font-black text-lg hover:from-gray-200 hover:to-gray-400 active:from-gray-400 active:to-gray-500 shadow-lg">
+                        class="px-3 md:px-8 py-2 md:py-4 bg-gradient-to-b from-gray-100 to-gray-300 border-4 border-gray-600 font-black text-sm md:text-lg hover:from-gray-200 hover:to-gray-400 active:from-gray-400 active:to-gray-500 shadow-lg whitespace-nowrap">
                     SEND! 🚀
                 </button>
             </form>
 
-            <div class="mt-4 border-4 border-green-600 bg-gradient-to-r from-green-300 to-blue-300 p-3 shadow-lg">
-                <div class="flex justify-around text-sm font-black text-gray-900">
-                    <span class="text-base">⚡ Status: <span class="text-green-700">CONNECTED</span></span>
-                    <span class="text-base" id="clock">🕐 <span></span></span>
+            <div class="mt-2 md:mt-4 border-4 border-green-600 bg-gradient-to-r from-green-300 to-blue-300 p-2 md:p-3 shadow-lg">
+                <div class="flex justify-around text-xs md:text-sm font-black text-gray-900">
+                    <span class="text-sm md:text-base">⚡ Status: <span class="text-green-700">CONNECTED</span></span>
+                    <span class="text-sm md:text-base" id="clock">🕐 <span></span></span>
                 </div>
             </div>
         </div>
 
-        <div class="border-8 border-double border-gray-800 bg-yellow-300 p-3 mt-4 shadow-2xl overflow-hidden">
-            <marquee behavior="scroll" direction="left" class="font-black text-lg text-red-600">
+        <div class="border-8 border-double border-gray-800 bg-yellow-300 p-2 md:p-3 mt-4 shadow-2xl overflow-hidden">
+            <marquee behavior="scroll" direction="left" class="font-black text-xs md:text-lg text-red-600">
                 🔥 Welcome to the BEST chatroom on the web! 🔥
                 Made with Django + HTMX 💻
                 No Flash Player required! 😎
@@ -96,10 +110,10 @@
             </marquee>
         </div>
 
-        <div class="fixed top-10 left-10 text-6xl animate-bounce">⭐</div>
-        <div class="fixed top-20 right-20 text-5xl animate-pulse">✨</div>
-        <div class="fixed bottom-20 left-20 text-6xl animate-spin" style="animation-duration: 3s;">🌟</div>
-        <div class="fixed bottom-32 right-16 text-4xl animate-bounce" style="animation-delay: 0.5s;">💫</div>
+        <div class="decorative-emoji fixed top-10 left-10 text-6xl animate-bounce">⭐</div>
+        <div class="decorative-emoji fixed top-20 right-20 text-5xl animate-pulse">✨</div>
+        <div class="decorative-emoji fixed bottom-20 left-20 text-6xl animate-spin" style="animation-duration: 3s;">🌟</div>
+        <div class="decorative-emoji fixed bottom-32 right-16 text-4xl animate-bounce" style="animation-delay: 0.5s;">💫</div>
 
     </div>
 
