@@ -9,7 +9,7 @@ from djangorealtime.publisher import publish, publish_global
 
 
 def test_page(request):
-    return render(request, 'test_sse.html')
+    return render(request, 'playground/test_sse.html')
 
 
 @require_http_methods(["POST"])

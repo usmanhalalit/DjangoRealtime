@@ -13,7 +13,7 @@ import getpass
 import os
 from pathlib import Path
 
-from example.hooks import before_send_hook, on_receive_hook
+from .hooks import before_send_hook, on_receive_hook
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -23,12 +23,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-io3aw*5mv64o^9_4+j@3ozq$#67u)k*(yann34pb9zl@v7@sum'
+SECRET_KEY = os.getenv(
+    'DJANGO_SECRET',
+    'django-insecure-io3aw*5mv64o^9_4+j@3ozq$#67u)k*(yann34pb9zl@v7@sum'
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = True if os.getenv("DEBUG") == "true" else False  # noqa: SIM210
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [os.getenv('SITE_DOMAIN', '127.0.0.1')]
 
 
 # Application definition
@@ -41,7 +44,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'djangorealtime',
-    'example',
+    'root',
+    'playground',
+    'chatroom',
 ]
 
 MIDDLEWARE = [
@@ -54,12 +59,12 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'example.urls'
+ROOT_URLCONF = 'root.urls'
 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'example' / 'templates'],
+        'DIRS': [BASE_DIR / 'root' / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -71,7 +76,7 @@ TEMPLATES = [
     },
 ]
 
-ASGI_APPLICATION = 'example.asgi.application'
+ASGI_APPLICATION = 'root.asgi.application'
 
 
 # Database
@@ -80,11 +85,11 @@ ASGI_APPLICATION = 'example.asgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'HOST': '127.0.0.1',
-        'PORT': '5432',
+        'HOST': os.getenv('PGHOST', 'localhost'),
+        'PORT': os.getenv('PGPORT', '5432'),
         'USER': os.getenv('PGUSER', getpass.getuser()),
-        'PASSWORD': '',
-        'NAME': 'djangorealtime-test',
+        'PASSWORD': os.getenv('PGPASSWORD', ''),
+        'NAME': os.getenv('PGDATABASE', 'djangorealtime-test'),
     }
 }
 

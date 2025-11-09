@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Chatroom Dot Com</title>
+
+    <!-- Tailwind CSS v4 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Comic+Sans+MS&display=swap');
+        body { font-family: 'Comic Sans MS', 'Comic Sans', cursive, sans-serif; }
+        @keyframes blink { 50% { opacity: 0; } }
+        .blink { animation: blink 1s linear infinite; }
+        @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-20px); } }
+        .float { animation: float 3s ease-in-out infinite; }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-purple-400 via-pink-400 to-cyan-400">
+
+    <!-- Decorative animated elements -->
+    <div class="fixed top-10 left-10 text-6xl animate-bounce">⭐</div>
+    <div class="fixed top-20 right-20 text-5xl animate-pulse">✨</div>
+    <div class="fixed bottom-20 left-20 text-6xl animate-spin" style="animation-duration: 3s;">🌟</div>
+    <div class="fixed bottom-32 right-16 text-4xl animate-bounce" style="animation-delay: 0.5s;">💫</div>
+
+    <div class="w-full max-w-md">
+
+        <!-- Login container -->
+        <div class="border-8 border-double border-gray-800 bg-gradient-to-br from-yellow-200 to-pink-200 p-8 shadow-2xl float">
+
+            <!-- Header -->
+            <div class="text-center mb-6">
+                <div class="text-6xl mb-4 animate-bounce">💬</div>
+                <h1 class="text-4xl font-black text-purple-700 mb-2">
+                    <span class="blink">✨</span> 90's CHATROOM <span class="blink">✨</span>
+                </h1>
+                <p class="text-lg font-bold text-pink-600">Enter the cyber space!</p>
+            </div>
+
+            <!-- Login form -->
+            <form method="post" class="space-y-4">
+                {% csrf_token %}
+
+                {% if error %}
+                <div class="border-4 border-red-600 bg-red-100 p-3 shadow-lg">
+                    <p class="text-red-700 font-bold text-center">❌ {{ error }}</p>
+                </div>
+                {% endif %}
+
+                <div>
+                    <label for="username" class="block font-black text-gray-800 mb-2 text-lg">
+                        👤 Enter Your Username:
+                    </label>
+                    <input type="text"
+                           id="username"
+                           name="username"
+                           placeholder="coolkid99"
+                           class="w-full p-4 border-4 border-gray-600 focus:outline-none focus:border-blue-500 text-lg shadow-lg"
+                           maxlength="150"
+                           required
+                           autofocus>
+                </div>
+
+                <button type="submit"
+                        class="w-full px-8 py-4 bg-gradient-to-b from-green-300 to-green-500 border-4 border-green-700 font-black text-xl hover:from-green-400 hover:to-green-600 active:from-green-600 active:to-green-700 shadow-lg">
+                    ENTER CHATROOM! 🚀
+                </button>
+            </form>
+
+            <!-- Info text -->
+            <div class="mt-6 border-4 border-blue-500 bg-blue-100 p-3 shadow-lg">
+                <p class="text-sm text-center font-bold text-blue-800">
+                    ℹ️ No password needed! Just pick a username and start chatting!
+                </p>
+            </div>
+
+        </div>
+
+        <!-- Footer marquee -->
+        <div class="border-8 border-double border-gray-800 bg-yellow-300 p-2 mt-4 shadow-2xl overflow-hidden">
+            <marquee behavior="scroll" direction="left" class="font-black text-sm text-red-600">
+                🔥 Best viewed in Netscape Navigator 4.0 or higher!
+                🌟 Made with Django + HTMX + SSE
+                💻 Under construction since 1999
+                🚧 Webring coming soon!
+            </marquee>
+        </div>
+
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,76 @@
+version: '3'
+
+vars:
+  DJANGO_SETTINGS_MODULE: root.settings
+  DB_NAME: djangorealtime-test
+
+env:
+  PYTHONPATH: ..:$PYTHONPATH
+
+tasks:
+  install:
+    desc: Install dependencies
+    cmds:
+      - uv pip install -r requirements.txt
+
+  db:create:
+    desc: Create PostgreSQL database
+    cmds:
+      - psql postgres -c "CREATE DATABASE {{.DB_NAME}};" || echo "Database may already exist"
+
+  db:drop:
+    desc: Drop PostgreSQL database
+    cmds:
+      - psql postgres -c "DROP DATABASE IF EXISTS {{.DB_NAME}};"
+
+  db:reset:
+    desc: Reset the database
+    cmds:
+      - task: db:drop
+      - task: db:create
+      - task: migrate
+
+  migrate:
+    desc: Run Django migrations
+    cmds:
+      - python manage.py migrate
+
+  makemigrations:
+    desc: Create Django migrations
+    cmds:
+      - python manage.py makemigrations
+
+  superuser:
+    desc: Create a superuser
+    cmds:
+      - python manage.py createsuperuser
+
+  shell:
+    desc: Open Django shell
+    cmds:
+      - python manage.py shell
+
+  run:
+    desc: Run development server with Hypercorn
+    cmds:
+      - python -m hypercorn root.asgi:application --bind 0.0.0.0:8085
+
+  dev:
+    desc: Setup and run development environment
+    cmds:
+      - task: install
+      - task: db:create
+      - task: migrate
+      - task: run
+
+  container_local:
+    desc: Build and run Docker container
+    cmds:
+      - docker build -t djangorealtime .
+      - docker run -p 8085:8085 -e PGHOST=host.docker.internal -e PGUSER={{.USER}} djangorealtime
+
+  container_init:
+    cmds:
+      - python manage.py migrate
+      - hypercorn root.asgi:application --bind 0.0.0.0:8085
+

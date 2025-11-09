@@ -21,7 +21,8 @@ from . import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', views.test_page, name='test_page'),
-    path('test/send-message/', views.send_test_message, name='send_test_message'),
+    path('', views.index, name='index'),
+    path('playground/', include('playground.urls')),
+    path('chat/', include('chatroom.urls')),
     path('realtime/', include('djangorealtime.urls')),
 ]

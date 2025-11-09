@@ -28,7 +28,7 @@
                     {% else %}
                         <div class="text-sm">
                             <p class="text-gray-500 mb-1">Not logged in (using global events)</p>
-                            <a href="/admin/login/?next=/" class="text-blue-600 hover:text-blue-800 underline">Login</a>
+                            <a href="{% url 'admin:login' %}?next={{ request.path }}" class="text-blue-600 hover:text-blue-800 underline">Login</a>
                         </div>
                     {% endif %}
                 </div>
@@ -201,7 +201,7 @@
                 const statusContent = statusDiv.querySelector('div');
                 
                 try {
-                    const response = await fetch('/test/send-message/', {
+                    const response = await fetch('{% url "playground:send_message" %}', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',

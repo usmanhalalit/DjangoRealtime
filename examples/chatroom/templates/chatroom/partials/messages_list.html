@@ -1,0 +1,23 @@
+{% for event in messages %}
+<div class="mb-4" id="message-{{ event.id }}">
+    <div class="flex items-start gap-2">
+        <span class="text-3xl">👤</span>
+        <div class="flex-1">
+            <div class="flex items-center gap-2 mb-1">
+                <span class="font-black {% if event.detail.username == current_user.username %}text-green-600{% else %}text-blue-600{% endif %}">
+                    {{ event.detail.username }}
+                </span>
+                <span class="text-xs text-gray-500">{{ event.created_at|date:"g:i A" }}</span>
+            </div>
+            <div class="border-4 {% if event.detail.username == current_user.username %}border-green-400 bg-green-50{% else %}border-blue-400 bg-blue-50{% endif %} p-3 shadow-md">
+                <p class="break-words">{{ event.detail.message }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% empty %}
+<div class="text-center p-8 text-gray-500" id="no-messages">
+    <p class="text-2xl mb-2">💬</p>
+    <p class="font-bold">No messages yet. Be the first to say hello!</p>
+</div>
+{% endfor %}

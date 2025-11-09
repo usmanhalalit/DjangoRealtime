@@ -1,0 +1,14 @@
+<div class="mb-4">
+    <div class="flex items-start gap-2">
+        <span class="text-3xl">👤</span>
+        <div class="flex-1">
+            <div class="flex items-center gap-2 mb-1">
+                <span class="font-black text-green-600">{{ username }}</span>
+                <span class="text-xs text-gray-500">{{ timestamp|date:"g:i A" }}</span>
+            </div>
+            <div class="border-4 border-green-400 bg-green-50 p-3 shadow-md">
+                <p class="break-words">{{ message }}</p>
+            </div>
+        </div>
+    </div>
+</div>

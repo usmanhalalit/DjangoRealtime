@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DjangoRealtime Examples</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div class="container mx-auto px-4 py-16">
+        <div class="max-w-4xl mx-auto">
+            <!-- Header -->
+            <div class="text-center mb-12">
+                <h1 class="text-5xl font-bold text-gray-900 mb-4">
+                    DjangoRealtime Examples
+                </h1>
+                <p class="text-xl text-gray-600">
+                    Realtime Django applications powered by PostgreSQL pub/sub and Server-Sent Events
+                </p>
+            </div>
+
+            <!-- Example Apps Grid -->
+            <div class="grid md:grid-cols-2 gap-6 mb-12">
+                <!-- Playground -->
+                <a href="/playground/" class="group block h-full">
+                    <div class="bg-white rounded-lg shadow-lg hover:shadow-xl transition-shadow p-8 border-2 border-transparent hover:border-blue-500 h-full flex flex-col">
+                        <div class="flex items-center mb-4">
+                            <span class="text-4xl mr-4">🎮</span>
+                            <h2 class="text-2xl font-bold text-gray-900 group-hover:text-blue-600">
+                                Playground
+                            </h2>
+                        </div>
+                        <p class="text-gray-600 mb-4 flex-grow line-clamp-3">
+                            Interactive SSE testing tool. Send events, monitor connections, and explore DjangoRealtime's capabilities.
+                        </p>
+                        <div class="flex flex-wrap gap-2">
+                            <span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">SSE</span>
+                            <span class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">Testing</span>
+                            <span class="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-medium">Events</span>
+                        </div>
+                    </div>
+                </a>
+
+                <!-- Chatroom -->
+                <a href="/chat/" class="group block h-full">
+                    <div class="bg-white rounded-lg shadow-lg hover:shadow-xl transition-shadow p-8 border-2 border-transparent hover:border-pink-500 h-full flex flex-col">
+                        <div class="flex items-center mb-4">
+                            <span class="text-4xl mr-4">💬</span>
+                            <h2 class="text-2xl font-bold text-gray-900 group-hover:text-pink-600">
+                                Chatroom
+                            </h2>
+                        </div>
+                        <p class="text-gray-600 mb-4 flex-grow line-clamp-3">
+                            90's style group chat with real-time messaging. Built with pure HTMX and minimal JavaScript.
+                        </p>
+                        <div class="flex flex-wrap gap-2">
+                            <span class="px-3 py-1 bg-pink-100 text-pink-700 rounded-full text-sm font-medium">HTMX</span>
+                            <span class="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-sm font-medium">Real-time</span>
+                            <span class="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-sm font-medium">Chat</span>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Features -->
+            <div class="bg-white rounded-lg shadow-lg p-8 mb-8">
+                <h3 class="text-2xl font-bold text-gray-900 mb-6">Key Features</h3>
+                <div class="grid md:grid-cols-3 gap-6">
+                    <div>
+                        <div class="text-3xl mb-2">⚡</div>
+                        <h4 class="font-bold text-gray-900 mb-2">No Polling</h4>
+                        <p class="text-gray-600 text-sm">True real-time updates using Server-Sent Events. No polling required!</p>
+                    </div>
+                    <div>
+                        <div class="text-3xl mb-2">🐘</div>
+                        <h4 class="font-bold text-gray-900 mb-2">PostgreSQL Pub/Sub</h4>
+                        <p class="text-gray-600 text-sm">Leverages PostgreSQL's LISTEN/NOTIFY for efficient event broadcasting.</p>
+                    </div>
+                    <div>
+                        <div class="text-3xl mb-2">📦</div>
+                        <h4 class="font-bold text-gray-900 mb-2">Event Storage</h4>
+                        <p class="text-gray-600 text-sm">All events stored in the database for history and replay capabilities.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Links -->
+            <div class="text-center">
+                <a href="https://github.com/usmanhalalit/djangorealtime"
+                   target="_blank"
+                   rel="noopener noreferrer"
+                   class="inline-block px-6 py-3 bg-gray-900 text-white font-medium rounded-lg hover:bg-gray-800 transition-colors">
+                    View on GitHub →
+                </a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
