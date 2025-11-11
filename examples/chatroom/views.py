@@ -79,15 +79,24 @@ def get_messages(request):
     """
     HTMX endpoint to fetch messages partial.
     Triggered on page load and when SSE events arrive.
+    Supports pagination via offset parameter.
     """
-    recent_messages = Event.objects.filter(
-        type='chat_message'
-    ).order_by('-created_at')[:50]
+    # Get pagination parameters
+    offset = int(request.GET.get('offset', 0))
+    limit = 20
 
-    # Keep reversed order for flex-col-reverse (newest first in HTML)
-    messages = list(recent_messages)
+    # Fetch messages with pagination
+    messages_queryset = Event.objects.filter(
+        type='chat_message'
+    ).order_by('-created_at')[offset:offset + limit]
+
+    messages = list(messages_queryset)
+
+    # Calculate next offset for infinite scroll
+    next_offset = offset + limit if len(messages) == limit else None
 
     return render(request, 'chatroom/partials/messages_list.html', {
         'messages': messages,
         'current_user': request.user,
+        'next_offset': next_offset,
     })

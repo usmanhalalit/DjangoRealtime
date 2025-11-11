@@ -18,6 +18,17 @@
 {% empty %}
 <div class="text-center p-8 text-gray-500" id="no-messages">
     <p class="text-2xl mb-2">💬</p>
-    <p class="font-bold">No messages yet. Be the first to say hello!</p>
+    <p class="font-bold">No messages here. Say hello!</p>
 </div>
 {% endfor %}
+
+{% if next_offset %}
+<div
+        class="text-center p-2 text-gray-500 text-sm"
+        hx-get="{% url 'chatroom:get_messages' %}?offset={{ next_offset }}"
+        hx-trigger="intersect once"
+        hx-swap="outerHTML"
+>
+    <span class="animate-pulse">Loading older messages...</span>
+</div>
+{% endif %}
