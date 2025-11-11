@@ -10,7 +10,7 @@ Check out the live demo at and chat in 90s-style chatroom:
 
 [**Chat room**](https://djr.nofuss.site/chat/)
 
-Built with HTMX and 6 lines of vanilla JavaScript!
+Built with HTMX and 6 lines of vanilla JavaScript! Code is in [examples/chatroom](examples/chatroom).
 
 
 ## Basic Usage
@@ -37,9 +37,10 @@ Built on HTTP Server-Sent Events (SSE) and PostgreSQL pub/sub. Everything is aut
 - **Works everywhere** - SSE is your standard HTTP, no WebSocket complexity
 - **Scales across workers** - multiple Django processes can communicate via PostgreSQL
 - **Zero fluff** - runs on your existing Django + PostgreSQL stack
-- **Automatic reconnection** - handles network interruptions transparently
+- **Automatic reconnection** - handles network interruptions seamlessly
 - **Event persistence** - events stored in database for reliability and replay
 - **Django admin integration** - view and replay events from the admin panel
+- **Sync or async views** - keep using sync views, only make sure to use asgi server
 
 ## Table of Contents
 
@@ -61,8 +62,6 @@ Built on HTTP Server-Sent Events (SSE) and PostgreSQL pub/sub. Everything is aut
   - [Performance and Scalability](#performance-and-scalability)
   - [Settings](#settings)
   - [Manual JavaScript Connection](#manual-javascript-connection)
-- [Local Development](#local-development)
-- [Requirements](#requirements)
 
 ## Installation
 
@@ -226,7 +225,7 @@ def on_receive_hook(event: Event) -> Event | None:
 ```
 
 **`BEFORE_SEND_HOOK`**
-Called before sending an event to clients. You can modify or abort the event here.
+Called before sending an event to each client. You can modify or abort the event here.
 
 ```python
 from djangorealtime import Event
@@ -277,7 +276,7 @@ DJANGOREALTIME = {
 Note: `AUTO_LISTEN`, only, by choice, starts to listen when a web server is running. It does not start automatically 
 when running management commands. This is to avoid unnecessary connections when not needed.
 
-If you have a long-running management like a queue worker that needs to listen to system events, you can start
+If you have a long-running management command like a queue worker that needs to listen to system events, you can start
 the listener manually:
 ```python
 from djangorealtime import Listener
@@ -290,6 +289,8 @@ You only need a listener if you want to listen to events on that process.
 
 ### Manual JavaScript Connection
 By default, JavaScript connection is auto-established when you include the JS snippet using `{% djangorealtime_js %}` tag.
+SSE connections are automatically reconnected on network interruptions. In a rare case, some browsers may give up,
+we've added another exponential backoff reconnection strategy.
 
 If you want to manually connect, use: `{% djangorealtime_js auto_connect=False %}` and then:
 

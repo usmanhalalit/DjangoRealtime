@@ -1,6 +1,6 @@
 (function() {
     'use strict';
-    
+
     window.DjangoRealtime = {
         connect: function(options) {
             options = options || {};
@@ -9,10 +9,12 @@
             const onError = options.onError || function() {};
             const onConnect = options.onConnect || function() {};
             const debug = options.debug || false;
-            
+
+            let retryCount = 0;
             const eventSource = new EventSource(endpoint);
-            
+
             eventSource.onmessage = function(event) {
+                retryCount = 0; // Reset on successful message
                 if (debug) {
                     console.log('DjangoRealtime - Received:', event.data);
                 }
@@ -57,11 +59,23 @@
             eventSource.onerror = function(error) {
                 console.error('DjangoRealtime - SSE Error:', error);
                 onError(error);
+
+                // Manual reconnect backup with exponential backoff
+                if (eventSource.readyState === EventSource.CLOSED) {
+                    const delay = Math.min(1000 * Math.pow(2, retryCount), 64000);
+                    if (debug) {
+                        console.log(`DjangoRealtime - Attempting to reconnect in ${delay} ms`);
+                    }
+                    retryCount++;
+                    setTimeout(function() {
+                        DjangoRealtime.connect(options);
+                    }, delay);
+                }
             };
-            
+
             return eventSource;
         },
-        
+
         subscribe: function(eventType, callback) {
             const eventKey = `djr:${eventType}`;
             window.addEventListener(eventKey, function(e) {
@@ -70,7 +84,7 @@
         }
     };
 
-    // Auto-connect configuration
+    // Auto-connect configuration, __AUTO_CONNECT__ is replaced server-side
     const autoConnect = __AUTO_CONNECT__;
 
     // Auto-connect if enabled
