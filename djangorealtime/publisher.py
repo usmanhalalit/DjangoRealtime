@@ -8,6 +8,7 @@ from .structs import Event, Scope, Status
 
 _backend = None
 
+
 def _get_backend():
     """Lazy backend initialization"""
     global _backend
@@ -15,7 +16,13 @@ def _get_backend():
         _backend = get_backend()
     return _backend
 
-def publish(user_id: str|int, event_type: str, detail: dict | None = None):
+
+def publish(
+        user_id: str | int,
+        event_type: str,
+        detail: dict | None = None,
+        private_data: dict | None = None
+):
     """
     Publish an event to all connected clients.
 
@@ -23,24 +30,26 @@ def publish(user_id: str|int, event_type: str, detail: dict | None = None):
         user_id: ID of the user (str or int)
         event_type: String identifier for the event type
         detail: Dict with event details (optional)
+        private_data: private data to store in DB with the event, not sent to frontend (optional)
 
     Returns:
         The published event dict
     """
     event = Event(type=event_type, detail=detail or {}, scope=Scope.USER, user_id=str(user_id))
-    event.persist()
+    event.persist(private_data=private_data)
     _get_backend().publish(event)
 
     return event
 
 
-def publish_global(event_type: str, detail: dict | None = None):
+def publish_global(event_type: str, detail: dict | None = None, private_data: dict | None = None):
     """
     Publish a global event to all connected clients.
 
     Args:
         event_type: String identifier for the event type
         detail: Dict with event details (optional)
+        private_data: private data to store in DB with the event, not sent to frontend (optional)
 
     Returns:
         The published event dict
@@ -51,18 +60,37 @@ def publish_global(event_type: str, detail: dict | None = None):
         publish_global('simple_event')
     """
     event = Event(type=event_type, detail=detail or {}, scope=Scope.PUBLIC)
-    event.persist()
+    event.persist(private_data=private_data)
     _get_backend().publish(event)
 
     return event
 
 
-def publish_system(event_type: str, detail: dict | None = None):
+def publish_system(
+        event_type: str,
+        detail: dict | None = None,
+        user_id: str | int | None = None,
+        private_data: dict | None = None
+):
     """
     Publish a system event (sent to backend subscribers, not to SSE clients).
+
+    Args:
+        event_type: String identifier for the event type
+        detail: Dict with event details (optional)
+        user_id: Optional user ID for reference (event still dispatches to all internal listeners)
+        private_data: private data to store in DB with the event, not sent to frontend (optional)
+
+    Returns:
+        The published event dict
     """
-    event = Event(type=event_type, detail=detail or {}, scope=Scope.SYSTEM)
-    event.persist()
+    event = Event(
+        type=event_type,
+        detail=detail or {},
+        scope=Scope.SYSTEM,
+        user_id=str(user_id) if user_id else None
+    )
+    event.persist(private_data=private_data)
     _get_backend().publish(event)
 
     return event
@@ -73,6 +101,7 @@ def subscribe(callback: Callable[[Event], None]) -> Callable:
     Subscribe to all events from the backend.
     Can be used as a decorator or regular function.
     """
+
     def wrapped(sender, event, **kwargs):
         callback(event)
         event.update_status(status=Status.DISPATCHED)

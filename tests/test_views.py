@@ -77,8 +77,22 @@ class TestUserFiltering:
 
 
 class TestEvent:
+    @pytest.fixture()
+    def persisted_event(self, event):
+        event.persist(private_data={'page_title': 'Home Page'})
+        return event
+
     def test_event_to_dict(self, event):
         event_dict = event.to_dict()
         assert event_dict['type'] == 'page_imported'
         assert event_dict['detail']['page_id'] == 42
+
+    @pytest.mark.django_db
+    def test_event_model(self, persisted_event):
+        model = persisted_event.model()
+        assert model.id == persisted_event.id
+
+    @pytest.mark.django_db
+    def test_event_model_private_data(self, persisted_event):
+        assert persisted_event.model().private_data == {'page_title': 'Home Page'}
 

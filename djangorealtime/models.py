@@ -35,6 +35,11 @@ class Event(models.Model):
     def __str__(self):
         return f"{self.type} ({self.id})"
 
+    @property
+    def private_data(self) -> dict:
+        """Access private data stored in data_store (not sent to frontend)."""
+        return self.data_store.get('private_data', {})
+
     @classmethod
     def append_activity_with_lock(cls, event_id, status_label, user_id=None):
         from django.db import transaction
@@ -78,6 +83,13 @@ class Event(models.Model):
                 update_args["status"] = status_label
 
             cls.objects.filter(id=event_id).update(**update_args)
+
+    def data_store_update(self, key, value):
+        """Merge a value into a key in data_store (shallow merge)."""
+        current_data = self.data_store.get(key, {})
+        new_data = {**current_data, **value}
+        self.data_store[key] = new_data
+        self.save()
 
     def replay(self):
         """

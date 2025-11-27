@@ -9,7 +9,7 @@ app_name = 'djangorealtime'
 
 sse_view = views.sse_view
 
-# Auto-detect WSGI/ASGI and pick the right view
+# Auto-detect WSGI/ASGI and pick the right view in case of wsgi runserver
 if 'django.core.handlers.wsgi' in sys.modules:
     sse_view = views.sse_view_sync
 

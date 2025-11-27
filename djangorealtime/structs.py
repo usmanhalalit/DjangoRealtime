@@ -67,10 +67,13 @@ class Event(Struct):
         if self.id is None:
             self.id = str(uuid.uuid4())
 
-    def persist(self, status: Status = Status.NEW):
+    def persist(self, status: Status = Status.NEW, private_data: dict | None = None):
         if self.skip_storage or not Config.ENABLE_EVENT_STORAGE:
             return None
         event_model = apps.get_model(Config.EVENT_MODEL)
+        data_store = {'activity': []}
+        if private_data:
+            data_store['private_data'] = private_data
         m = event_model.objects.create(
             id=self.id,
             type=self.type,
@@ -78,9 +81,7 @@ class Event(Struct):
             detail=self.detail,
             user_id=self.user_id,
             status=status.value,
-            data_store={
-                'activity': [],
-            },
+            data_store=data_store,
         )
         return m
 
@@ -97,3 +98,10 @@ class Event(Struct):
         )
 
         return None
+
+    def model(self):
+        """Get the database model instance for this event."""
+        if self.skip_storage or not Config.ENABLE_EVENT_STORAGE:
+            return None
+        event_model = apps.get_model(Config.EVENT_MODEL)
+        return event_model.objects.get(id=self.id)
