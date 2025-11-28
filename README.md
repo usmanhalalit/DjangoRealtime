@@ -149,7 +149,7 @@ publish_system(event_type='server_restart', detail={'reason': 'maintenance'})
 These events are sent to internal system processes only, not to browsers. Like another Django instance or a 
 Django management command listening for events.
 
-This takes also takes optional `user_id` argument, but only for your reference. Event is still not sent to browsers.
+This also takes optional `user_id` argument, but only for your reference. Event is still not sent to browsers.
 
 
 ### Listening to Events
@@ -203,8 +203,12 @@ be passing a fraction of that in normal usage. Use references or IDs in the even
 
 Events including detail and activities are stored in the database, so make sure not to pass sensitive information directly.
 
-You can also pass private_data with the event that is not sent to clients, but stored in the database for your reference.
-Use `private_data={}` kwarg in `publish*` functions.
+You can also pass private data with the event that is not sent to clients, but stored in the database for your reference.
+Use `private_data={}` kwarg in `publish*` functions. This how private data can be retrieved:
+```python
+event.model().private_data  
+```
+
 
 Set `'ENABLE_EVENT_STORAGE': False` in [settings](#settings) to disable event storage if you don't need it.
 
