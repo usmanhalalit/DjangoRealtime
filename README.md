@@ -10,7 +10,7 @@ Check out the live demo at and chat in 90s-style chatroom:
 
 [**Chat room**](https://djr.nofuss.site/chat/)
 
-Built with HTMX and 6 lines of vanilla JavaScript! Code is in [examples/chatroom](examples/chatroom).
+Built with HTMX and 6 lines of vanilla JavaScript! Code is in examples/chatroom.
 
 
 ## Basic Usage
@@ -41,6 +41,16 @@ Built on HTTP Server-Sent Events (SSE) and PostgreSQL pub/sub. Everything is aut
 - **Event persistence** - events stored in database for reliability and replay
 - **Django admin integration** - view and replay events from the admin panel
 - **Sync or async views** - keep using sync views, only make sure to use asgi server
+
+
+## Use Cases
+- Update UI state without polling
+- Notify users of background task completion
+- Real-time messaging and chat
+- Communicate between multiple Django instances or background workers
+- Event-driven applications
+- Live dashboards and notifications
+- Flexible event log
 
 ## Table of Contents
 
@@ -88,12 +98,13 @@ urlpatterns = [
 ```
 
 ### Database Migration
-To create the necessary table, run:
+To create the necessary tables, run:
 ```bash
 python manage.py migrate djangorealtime
 ```
 
 You don't need this step if you disable event storage in [Settings](#settings).
+Please note, you need to have `'django.contrib.postgres'` in your `INSTALLED_APPS`. This is for better indexing.
 
 ### Frontend Setup
 Add this in your base HTML template in `<head>`.
@@ -137,6 +148,8 @@ publish_system(event_type='server_restart', detail={'reason': 'maintenance'})
 
 These events are sent to internal system processes only, not to browsers. Like another Django instance or a 
 Django management command listening for events.
+
+This takes also takes optional `user_id` argument, but only for your reference. Event is still not sent to browsers.
 
 
 ### Listening to Events
@@ -188,7 +201,10 @@ All events are efficiently stored in your Django database by default.
 There is a limit of 8kB payload per event due to PostgreSQL NOTIFY limitations. We do not think you should even
 be passing a fraction of that in normal usage. Use references or IDs in the event detail to keep it light.
 
-Events including detail are stored in the database, so make sure not to pass sensitive information directly.
+Events including detail and activities are stored in the database, so make sure not to pass sensitive information directly.
+
+You can also pass private_data with the event that is not sent to clients, but stored in the database for your reference.
+Use `private_data={}` kwarg in `publish*` functions.
 
 Set `'ENABLE_EVENT_STORAGE': False` in [settings](#settings) to disable event storage if you don't need it.
 
