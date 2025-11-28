@@ -71,7 +71,7 @@ class Event(Struct):
         if self.skip_storage or not Config.ENABLE_EVENT_STORAGE:
             return None
         event_model = apps.get_model(Config.EVENT_MODEL)
-        data_store = {'activity': []}
+        data_store = {}
         if private_data:
             data_store['private_data'] = private_data
         m = event_model.objects.create(
@@ -88,16 +88,7 @@ class Event(Struct):
     def update_status(self, status: Status, user_id: str | None = None):
         if self.skip_storage or not Config.ENABLE_EVENT_STORAGE:
             return None
-
-        event_model = apps.get_model(Config.EVENT_MODEL)
-
-        event_model.append_activity_with_lock(
-            event_id=self.id,
-            status_label=status.value,
-            user_id=user_id
-        )
-
-        return None
+        self.model().add_activity(status.value, user_id)
 
     def model(self):
         """Get the database model instance for this event."""

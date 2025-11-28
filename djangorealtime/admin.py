@@ -4,7 +4,12 @@ try:
     from django.contrib import admin
     from django.utils.html import format_html
 
-    from djangorealtime.models import Event
+    from djangorealtime.models import Event, EventActivity
+
+    class EventActivityInline(admin.TabularInline):
+        model = EventActivity
+        extra = 0
+        readonly_fields = ['status', 'user_id', 'created_at']
 
     @admin.register(Event)
     class EventAdmin(admin.ModelAdmin):
@@ -16,6 +21,7 @@ try:
         date_hierarchy = 'created_at'
         ordering = ['-created_at']
         actions = ['replay_events']
+        inlines = [EventActivityInline]
 
         @admin.action(description='Replay selected events')
         def replay_events(self, request, queryset):

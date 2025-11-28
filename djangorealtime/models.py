@@ -1,6 +1,5 @@
 from django.contrib.postgres.indexes import GinIndex, Index
 from django.db import models
-from django.db.models.expressions import RawSQL
 
 
 class Event(models.Model):
@@ -40,49 +39,23 @@ class Event(models.Model):
         """Access private data stored in data_store (not sent to frontend)."""
         return self.data_store.get('private_data', {})
 
-    @classmethod
-    def append_activity_with_lock(cls, event_id, status_label, user_id=None):
+    def add_activity(self, status_label, user_id=None):
+        """Add an activity record and update status if it's a progression."""
         from django.db import transaction
 
         from djangorealtime.structs import Status
 
         with transaction.atomic():
-            # Lock row to prevent concurrent modifications
-            current = cls.objects.select_for_update().get(id=event_id)
-
-            # Check if new status is a progression from current status
+            EventActivity.objects.create(
+                event=self,
+                status=status_label,
+                user_id=str(user_id) if user_id else None,
+            )
             new_status = Status(status_label)
-            current_status = Status(current.status)
-            should_update_status = new_status.is_progression_from(current_status)
-
-            # Build jsonb_build_object call conditionally based on user_id
-            if user_id is not None:
-                jsonb_fields = "'status', %s, 'timestamp', NOW(), 'user_id', %s"
-                params = [status_label, user_id]
-            else:
-                jsonb_fields = "'status', %s, 'timestamp', NOW()"
-                params = [status_label]
-
-            update_args = {
-                "data_store": RawSQL(
-                    f"""
-                    jsonb_set(
-                        COALESCE(data_store, '{{}}'::jsonb),
-                        '{{activity}}',
-                        COALESCE(data_store->'activity', '[]'::jsonb) ||
-                            jsonb_build_object({jsonb_fields}),
-                        true
-                    )
-                    """,
-                    params,
-                ),
-            }
-
-            # Only update status field if it's a progression
-            if should_update_status:
-                update_args["status"] = status_label
-
-            cls.objects.filter(id=event_id).update(**update_args)
+            current_status = Status(self.status)
+            if new_status.is_progression_from(current_status):
+                self.status = status_label
+                self.save(update_fields=['status'])
 
     def data_store_update(self, key, value):
         """Merge a value into a key in data_store (shallow merge)."""
@@ -119,4 +92,21 @@ class Event(models.Model):
         backend.publish(event)
 
         return event
+
+
+class EventActivity(models.Model):
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='activities')
+    status = models.CharField(max_length=32)
+    # event receiver user_id
+    user_id = models.CharField(max_length=64, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name_plural = 'Event activities'
+        indexes = [
+            Index(fields=['event', '-created_at'], name='djr_activity_event_created_idx'),
+        ]
+
+    def __str__(self):
+        return f"{self.status} ({self.event_id})"
 

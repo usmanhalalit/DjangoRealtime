@@ -37,9 +37,10 @@ class TestPublish:
         db_event = EventModel.objects.get(id=event.id)
         assert db_event.type == 'page_imported'
         assert db_event.user_id == '2'
-        assert len(db_event.data_store['activity']) > 0
-        assert 'status' in db_event.data_store['activity'][0]
-        assert 'timestamp' in db_event.data_store['activity'][0]
+        assert db_event.activities.count() > 0
+        activity = db_event.activities.first()
+        assert activity.status is not None
+        assert activity.created_at is not None
 
 
 
