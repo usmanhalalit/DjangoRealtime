@@ -150,6 +150,7 @@
     // Listen for DjangoRealtime SSE messages and trigger htmx refresh
     window.addEventListener('djr:chat_message', () => {
         htmx.trigger('#messages-container', 'refreshMessages');
+        new Audio('https://cdnjs.cloudflare.com/ajax/libs/ion-sound/3.0.7/sounds/button_tiny.mp3').play().catch(() => {});
     });
 
     const clockSpan = document.querySelector('#clock span');
