@@ -31,13 +31,13 @@ window.addEventListener('djr:task_complete', (e) => {
 
 ## How it works
 
-Built on HTTP Server-Sent Events (SSE) and PostgreSQL pub/sub. Everything is auto-configured:
+Built on HTTP Server-Sent Events (SSE) and native PostgreSQL NOTIFY/LISTEN. Everything is auto-configured:
 
-- **Secure by default** - events are user-scoped by default, not broadcast to everyone
+- **Secure by default** - events are user-scoped by default
 - **Works everywhere** - SSE is your standard HTTP, no WebSocket complexity
 - **Scales across workers** - multiple Django processes can communicate via PostgreSQL
-- **Zero fluff** - runs on your existing Django + PostgreSQL stack
-- **Automatic reconnection** - handles network interruptions seamlessly
+- **Zero fluff** - runs on your existing Django + PostgreSQL stack.
+- **Automatic reconnection** - handles network interruptions seamlessly, for both client and server
 - **Event persistence** - events stored in database for reliability and replay
 - **Django admin integration** - view and replay events from the admin panel
 - **Sync or async views** - keep using sync views, only make sure to use asgi server
@@ -46,11 +46,12 @@ Built on HTTP Server-Sent Events (SSE) and PostgreSQL pub/sub. Everything is aut
 ## Use Cases
 - Update UI state without polling
 - Notify users of background task completion
-- Real-time messaging and chat
+- Realtime messaging and chat
 - Communicate between multiple Django instances or background workers
 - Event-driven applications
-- Live dashboards and notifications
+- Live dashboards and notifications, like polls, comments, displays etc
 - Flexible event log
+- And more!
 
 ## Table of Contents
 
@@ -98,7 +99,7 @@ urlpatterns = [
 ```
 
 ### Database Migration
-To create the necessary tables, run:
+To create necessary tables, run:
 ```bash
 python manage.py migrate djangorealtime
 ```
@@ -135,7 +136,7 @@ These events are only sent to the specified user who is logged in using Django's
 #### Global Events
 ```python
 from djangorealtime import publish_global
-publish_global(event_type='turn_off_lights', detail={'time': '10:00 PM'})
+publish_global(event_type='new_update', detail={'data': 'some'})
 ```
 
 These events are broadcast to all connected clients or browsers, regardless of authentication.
@@ -143,7 +144,7 @@ These events are broadcast to all connected clients or browsers, regardless of a
 #### System Events
 ```python
 from djangorealtime import publish_system
-publish_system(event_type='server_restart', detail={'reason': 'maintenance'})
+publish_system(event_type='new_pull_request', detail={'pr_id': 456})
 ```
 
 These events are sent to internal system processes only, not to browsers. Like another Django instance or a 
@@ -153,7 +154,7 @@ This also takes optional `user_id` argument, but only for your reference. Event 
 
 
 ### Listening to Events
-In your JavaScript code, listen to events using DOM events or the helper method. Just listen on `window`
+In your JavaScript code, listen to events using DOM events. Just listen on `window`
 using the `djr:` prefix before your event type.
 ```javascript
 window.addEventListener('djr:task_complete', (e) => {
@@ -194,14 +195,19 @@ def on_event(event: Event):
 ```
 
 ### Event Storage
-PostgreSQL pub/sub is not persistent. But we built on top of it to provide reliable event storage out of the box.
+PostgreSQL NOTIFY is not persistent. But we built on top of it to provide reliable event storage out of the box.
 
 All events are efficiently stored in your Django database by default. 
 
 There is a limit of 8kB payload per event due to PostgreSQL NOTIFY limitations. We do not think you should even
-be passing a fraction of that in normal usage. Use references or IDs in the event detail to keep it light.
+be passing a fraction of that in normal usage. Use references, IDs, or `private_data` to keep it light.
 
-Events including detail and activities are stored in the database, so make sure not to pass sensitive information directly.
+Events including detail, activities and private_data are stored in the database, 
+so make sure not to pass sensitive information directly.
+
+Set `'ENABLE_EVENT_STORAGE': False` in [settings](#settings) to disable event storage if you don't need it.
+
+#### Private Data
 
 You can also pass private data with the event that is not sent to clients, but stored in the database for your reference.
 Use `private_data={}` kwarg in `publish*` functions. This how private data can be retrieved:
@@ -209,8 +215,6 @@ Use `private_data={}` kwarg in `publish*` functions. This how private data can b
 event.model().private_data  
 ```
 
-
-Set `'ENABLE_EVENT_STORAGE': False` in [settings](#settings) to disable event storage if you don't need it.
 
 #### Django Admin
 DjangoRealtime seamlessly integrates with Django admin to provide a simple interface to view events and activities.
@@ -272,16 +276,19 @@ DjangoRealtime is designed to be lightweight and efficient. We have production a
 You can use multiple Django instances behind a load balancer. Each instance will have its own listener process.
 All Django instances communicate via your PostgreSQL instance.
 
-Please note, a listener will always maintain a single persistent database connection to PostgreSQL. It is optimised for low
-database connection count, so it closes the connection after operations.
+Please note, a listener will always maintain a single persistent database connection to PostgreSQL. If this connection 
+breaks, say when PostgreSQL cluster restarts, the listener will keep logging errors and retrying the connection with
+exponential backoff.
+
+Other database connections are optimised for low database connection count, so they get closed after operations.
 
 We've seen very low latency with all features enabled. If you want even lower latency, you can disable event storage by
 having `'ENABLE_EVENT_STORAGE': False` in [settings](#settings).
 
-All events use a single PostgreSQL channel. Then we demultiplex events in the listener process based on `type`.
+All events use a single PostgreSQL channel. Then we demultiplex events in the listener process based on `event_type`.
 
 ### Settings
-All of the settings are optional. Add to your Django `settings.py`:
+All settings are optional. Add to your Django `settings.py` if you want to override defaults.
 
 ```python
 DJANGOREALTIME = {
@@ -293,15 +300,14 @@ DJANGOREALTIME = {
     'BEFORE_SEND_HOOK': callback_function,  # Custom callback before sending an event to clients
 }
 ```
-Note: `AUTO_LISTEN`, only, by choice, starts to listen when a web server is running. It does not start automatically 
+Note: `AUTO_LISTEN`, only, by choice, starts a listener when a web server is running. It does not start automatically 
 when running management commands. This is to avoid unnecessary connections when not needed.
 
 If you have a long-running management command like a queue worker that needs to listen to system events, you can start
 the listener manually:
 ```python
 from djangorealtime import Listener
-listener = Listener()
-listener.start()  # Non-blocking
+Listener().start()  # Non-blocking
 ```
 
 Note: you don't need to start an additional listener for publishing an event from another process.
@@ -309,7 +315,7 @@ You only need a listener if you want to listen to events on that process.
 
 ### Manual JavaScript Connection
 By default, JavaScript connection is auto-established when you include the JS snippet using `{% djangorealtime_js %}` tag.
-SSE connections are automatically reconnected on network interruptions. In a rare case, some browsers may give up,
+SSE connections are automatically reconnected on network interruptions. In a rare case, if some browsers give up,
 we've added another exponential backoff reconnection strategy.
 
 If you want to manually connect, use: `{% djangorealtime_js auto_connect=False %}` and then:
