@@ -26,10 +26,11 @@ class DjangorealtimeConfig(AppConfig):
         """Check if we're running as a web server (not a management command)"""
 
         # Check for runserver in command line args
-        if len(sys.argv) > 1 and 'runserver' in sys.argv:
+        if len(sys.argv) > 1 and sys.argv[1] == 'runserver':
             # Only start in the worker process, not the reloader
             return os.environ.get('RUN_MAIN') == 'true'
 
-        # Check for ASGI handlers (for production servers)
-        return 'django.core.handlers.asgi' in sys.modules
+        # Check for ASGI application pattern in command line args
+        # Matches: project.asgi:application, asgi:app, myproject.asgi:app, etc.
+        return any('.asgi:' in arg or arg.startswith('asgi:') for arg in sys.argv)
 
