@@ -27,13 +27,10 @@ def _on_event(event: Event):
 
 
 def _get_user_id(request):
-    try:
-        if not hasattr(request, 'user') or not hasattr(request.user, 'pk'):
-            return None
-        user_id = request.user.pk
-        return str(user_id) if user_id is not None else None
-    finally:
-        connection.close()
+    if not hasattr(request, 'user') or not hasattr(request.user, 'pk'):
+        return None
+    user_id = request.user.pk
+    return str(user_id) if user_id is not None else None
 
 
 def _process_event(event, request, user_id):
@@ -74,10 +71,6 @@ async def event_stream(request):
 
 
 async def sse_view(request):
-    # Close any DB connection opened by middleware before starting the long-lived
-    # SSE stream. Without this, connections opened by auth middleware (etc.) would
-    # remain open for the entire duration of the streaming response.
-    connection.close()
     return StreamingHttpResponse(
         event_stream(request),
         content_type='text/event-stream',
@@ -102,7 +95,6 @@ def async_generator_to_sync(async_gen_func):  # pragma: no cover
 
 
 def sse_view_sync(request):  # pragma: no cover
-    connection.close()
     return StreamingHttpResponse(
         async_generator_to_sync(event_stream)(request),
         content_type='text/event-stream',
