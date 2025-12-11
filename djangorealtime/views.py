@@ -5,6 +5,7 @@ import json
 from django.db import connection
 from django.http import StreamingHttpResponse
 
+from djangorealtime.config import Config
 from djangorealtime.hooks import execute_before_send_hook
 from djangorealtime.publisher import subscribe
 from djangorealtime.queues import RequestQueue
@@ -44,7 +45,8 @@ def _process_event(event, request, user_id):
         detail['type'] = processed.type
         return f"data: {json.dumps(detail)}\n\n"
     finally:
-        connection.close()
+        if Config.CLOSE_DB_PER_EVENT:
+            connection.close()
 
 
 async def event_stream(request):
@@ -61,9 +63,7 @@ async def event_stream(request):
                 yield ": heartbeat\n\n"
                 continue
 
-            # message = await sync_to_async(_process_event)(event, request)
             message = await run_in_thread(_process_event, event, request, request_user_id)
-            # message = await _process_event(event, request)
             if message:
                 yield message
     finally:

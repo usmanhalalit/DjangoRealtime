@@ -292,12 +292,15 @@ All settings are optional. Add to your Django `settings.py` if you want to overr
 
 ```python
 DJANGOREALTIME = {
-    'AUTO_LISTEN': True,  # Auto-start a non-blocking listener thread with web server(default: True)
+    'AUTO_LISTEN': True,  # Auto-start a non-blocking listener thread with web server (default: True)
     'EVENT_MODEL': 'djangorealtime.models.Event',  # If you want to use a custom event model
     'ENABLE_EVENT_STORAGE': True,  # Enable/disable event storage in DB (default: True)
 
     'ON_RECEIVE_HOOK': callback_function,  # Custom callback on receiving an event
     'BEFORE_SEND_HOOK': callback_function,  # Custom callback before sending an event to clients
+
+    'CONCURRENT_SSE_WORKERS': 1,  # Thread pool size for SSE event processing (default: 1)
+    'CLOSE_DB_PER_EVENT': True,  # Close DB connection after each event (default: True)
 }
 ```
 Note: `AUTO_LISTEN`, only, by choice, starts a listener when a web server is running. It does not start automatically 

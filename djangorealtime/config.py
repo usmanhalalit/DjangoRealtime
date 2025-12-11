@@ -27,6 +27,8 @@ class Config:
     EVENT_MODEL = 'djangorealtime.Event'
     ON_RECEIVE_HOOK = None
     BEFORE_SEND_HOOK = None
+    CONCURRENT_SSE_WORKERS = 1
+    CLOSE_DB_PER_EVENT = True
 
     @classmethod
     def load(cls):
@@ -39,3 +41,5 @@ class Config:
         cls.EVENT_MODEL = config_dict.get('EVENT_MODEL', 'djangorealtime.Event')
         cls.ON_RECEIVE_HOOK = config_dict.get('ON_RECEIVE_HOOK', None)
         cls.BEFORE_SEND_HOOK = config_dict.get('BEFORE_SEND_HOOK', None)
+        cls.CONCURRENT_SSE_WORKERS = config_dict.get('CONCURRENT_SSE_WORKERS', 1)
+        cls.CLOSE_DB_PER_EVENT = config_dict.get('CLOSE_DB_PER_EVENT', True)
