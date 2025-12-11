@@ -27,10 +27,13 @@ def _on_event(event: Event):
 
 
 def _get_user_id(request):
-    if not hasattr(request, 'user') or not hasattr(request.user, 'pk'):
-        return None
-    user_id = request.user.pk
-    return str(user_id) if user_id is not None else None
+    try:
+        if not hasattr(request, 'user') or not hasattr(request.user, 'pk'):
+            return None
+        user_id = request.user.pk
+        return str(user_id) if user_id is not None else None
+    finally:
+        connection.close()
 
 
 def _process_event(event, request, user_id):
