@@ -161,6 +161,14 @@
         if (!clockSpan) return;
         clockSpan.textContent = new Date().toLocaleTimeString();
     }, 1000);
+
+    function localizeTime() {
+        document.querySelectorAll('time').forEach(t =>
+            t.textContent = new Date(t.dateTime).toLocaleTimeString([], {hour: 'numeric', minute: '2-digit'})
+        );
+    }
+    localizeTime();
+    document.body.addEventListener('htmx:afterSwap', localizeTime);
 </script>
 </body>
 </html>

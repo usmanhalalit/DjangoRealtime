@@ -7,7 +7,7 @@
                 <span class="font-black {% if event.detail.username == current_user.username %}text-green-600{% else %}text-blue-600{% endif %} truncate">
                     {{ event.detail.username }}
                 </span>
-                <span class="text-xs text-gray-500 flex-shrink-0">{{ event.created_at|date:"g:i A" }}</span>
+                <time datetime="{{ event.created_at|date:'c' }}" class="text-xs text-gray-500 flex-shrink-0">{{ event.created_at|date:"g:i A" }}</time>
             </div>
             <div class="border-4 {% if event.detail.username == current_user.username %}border-green-400 bg-green-50{% else %}border-blue-400 bg-blue-50{% endif %} p-3 shadow-md max-w-full min-w-0">
                 <p class="break-all whitespace-pre-wrap">{{ event.detail.message|slice:":160" }}</p>
