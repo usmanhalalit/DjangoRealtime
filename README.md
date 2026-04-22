@@ -301,6 +301,7 @@ DJANGOREALTIME = {
 
     'CONCURRENT_SSE_WORKERS': 1,  # Thread pool size for SSE event processing (default: 1)
     'CLOSE_DB_PER_EVENT': True,  # Close DB connection after each event (default: True)
+    'HEARTBEAT_INTERVAL': 5,  # Seconds between SSE heartbeats on idle connections (default: 5)
 }
 ```
 Note: `AUTO_LISTEN`, only, by choice, starts a listener when a web server is running. It does not start automatically 

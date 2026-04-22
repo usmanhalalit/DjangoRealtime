@@ -58,7 +58,7 @@ async def event_stream(request):
         yield f"data: {json.dumps({'type': 'connected'})}\n\n"
         while True:
             try:
-                event = await asyncio.wait_for(queue.get(), timeout=1)
+                event = await asyncio.wait_for(queue.get(), timeout=Config.HEARTBEAT_INTERVAL)
             except asyncio.TimeoutError:
                 yield ": heartbeat\n\n"
                 continue

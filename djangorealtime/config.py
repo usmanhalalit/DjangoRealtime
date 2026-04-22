@@ -29,6 +29,7 @@ class Config:
     BEFORE_SEND_HOOK = None
     CONCURRENT_SSE_WORKERS = 1
     CLOSE_DB_PER_EVENT = True
+    HEARTBEAT_INTERVAL = 5
 
     @classmethod
     def load(cls):
@@ -43,3 +44,4 @@ class Config:
         cls.BEFORE_SEND_HOOK = config_dict.get('BEFORE_SEND_HOOK', None)
         cls.CONCURRENT_SSE_WORKERS = config_dict.get('CONCURRENT_SSE_WORKERS', 1)
         cls.CLOSE_DB_PER_EVENT = config_dict.get('CLOSE_DB_PER_EVENT', True)
+        cls.HEARTBEAT_INTERVAL = config_dict.get('HEARTBEAT_INTERVAL', 5)
